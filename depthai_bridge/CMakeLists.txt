@@ -12,16 +12,14 @@ if(POLICY CMP0057)
 endif()
 
 set(opencv_version 4)
-find_package(OpenCV ${opencv_version} QUIET COMPONENTS imgproc highgui)
+find_package (OpenCV 4.4 EXACT REQUIRED PATHS ~/nr22-software/include/ORB_SLAM3_OPENCV4/Thirdparty/opencv-4.4.0/build COMPONENTS imgproc highgui)
 if(NOT OpenCV_FOUND)
   message(STATUS "----------------Did not find OpenCV 4, trying OpenCV 3--------------")
   set(opencv_version 3)
   find_package(OpenCV ${opencv_version} REQUIRED COMPONENTS imgproc highgui)
 endif()
 
-message(STATUS "----------------Did not find OpenCV 4, trying OpenCV 3--------------")
-
-find_package(depthai CONFIG REQUIRED)
+find_package(depthai CONFIG REQUIRED PATHS ~/nr22-software/include/depthai-core/build)
 if(depthai_VERSION LESS_EQUAL 2.14.1)
   message( FATAL_ERROR "Installed DEPTHAI VERSION is less than 2.15.0.  Please upgrade to the latest version which solves the timesync issues" )
 endif()
