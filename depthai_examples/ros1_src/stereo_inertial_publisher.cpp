@@ -183,9 +183,9 @@ int main(int argc, char** argv) {
     ros::init(argc, argv, "stereo_inertial_node");
     ros::NodeHandle pnh("~");
 
-    std::string tfPrefix, mode, mxId, resourceBaseFolder, nnPath;
+    std::string tfPrefix, mode, mxId, resourceBaseFolder;
     std::string monoResolution = "720p";
-    std::string nnPath(BLOB_PATH);
+    std::string nnPath("none");
     std::cout << " nn path..." << nnPath << std::endl;
     int badParams = 0, stereo_fps, confidence, LRchecktresh, imuModeParam;
     bool lrcheck, extended, subpixel, enableDepth, rectify, depth_aligned;
@@ -193,7 +193,7 @@ int main(int argc, char** argv) {
     bool usb2Mode, poeMode, syncNN;
     double angularVelCovariance, linearAccelCovariance;
     double dotProjectormA, floodLightmA;
-    std::string nnName(BLOB_NAME);  // Set your blob name for the model here
+    std::string nnName("test");  // Set your blob name for the model here
 
     badParams += !pnh.getParam("mxId", mxId);
     badParams += !pnh.getParam("usb2Mode", usb2Mode);
