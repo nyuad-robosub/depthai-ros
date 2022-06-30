@@ -64,14 +64,14 @@ namespace depthai_examples{
             std::tie(pipeline, monoWidth, monoHeight) = createPipeline(enableDepth, lrcheck, extended, subpixel, confidence, LRchecktresh, monoResolution);
             _dev = std::make_unique<dai::Device>(pipeline);
 
-            auto leftQueue = _dev->getOutputQueue("left", 30, false);
-            auto rightQueue = _dev->getOutputQueue("right", 30, false);
+            auto leftQueue = _dev->getOutputQueue("left", 15, false);
+            auto rightQueue = _dev->getOutputQueue("right", 15, false);
 
             std::shared_ptr<dai::DataOutputQueue> stereoQueue;
             if (enableDepth) {
-                stereoQueue = _dev->getOutputQueue("depth", 30, false);
+                stereoQueue = _dev->getOutputQueue("depth", 15, false);
             }else{
-                stereoQueue = _dev->getOutputQueue("disparity", 30, false);
+                stereoQueue = _dev->getOutputQueue("disparity", 15, false);
             }
             auto calibrationHandler = _dev->readCalibration();
 
@@ -101,7 +101,7 @@ namespace depthai_examples{
                                                                                              leftConverter.get(),
                                                                                              std::placeholders::_1, 
                                                                                              std::placeholders::_2) , 
-                                                                                             30,
+                                                                                             15,
                                                                                              leftCameraInfo,
                                                                                              "left");
 
@@ -119,7 +119,7 @@ namespace depthai_examples{
                                                                                              rightConverter.get(), 
                                                                                              std::placeholders::_1, 
                                                                                              std::placeholders::_2) , 
-                                                                                             30,
+                                                                                             15,
                                                                                              rightCameraInfo,
                                                                                              "right");
 
@@ -135,7 +135,7 @@ namespace depthai_examples{
                                                                                              // and image type is also same we can reuse it
                                                                              std::placeholders::_1, 
                                                                              std::placeholders::_2) , 
-                                                                             30,
+                                                                             15,
                                                                              rightCameraInfo,
                                                                              "stereo");
 
