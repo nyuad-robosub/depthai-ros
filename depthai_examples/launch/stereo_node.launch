@@ -49,7 +49,6 @@
         <param name="monoResolution"   value="$(arg monoResolution)"/>
     </node>            
 
-    <node type="rviz" name="rviz" pkg="rviz" args="-d $(find depthai_examples)/rviz/stereoPointCloud_v1.rviz" />
+    <!-- <node type="rviz" name="rviz" pkg="rviz" args="-d $(find depthai_examples)/rviz/stereoPointCloud_v1.rviz" /> -->
 
 </launch>
-

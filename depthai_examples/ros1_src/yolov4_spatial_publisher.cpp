@@ -99,6 +99,8 @@ dai::Pipeline createPipeline(bool syncNN, bool subpixel, std::string nnPath, int
 
     // Link plugins CAM -> NN -> XLINK
     colorCam->preview.link(spatialDetectionNetwork->input);
+    //preview returns an array of type output 
+
     if(syncNN)
         spatialDetectionNetwork->passthrough.link(xoutRgb->input);
     else

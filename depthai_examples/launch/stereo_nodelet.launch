@@ -22,6 +22,10 @@
     <arg name="LRchecktresh"          default="5" /> 
     <arg name="monoResolution"   default="800p"/> 
 
+    <!-- <arg name="sync_nn"             default="true"         />
+    <arg name="nnName"              default="mobilenet-ssd_openvino_2021.2_6shave.blob"         />
+    <arg name="resourceBaseFolder"  default="$(find depthai_examples)/resources" /> -->
+
     <include file="$(find depthai_bridge)/launch/urdf.launch">
         <arg name="base_frame"      value="$(arg  base_frame)"  />
         <arg name="parent_frame"    value="$(arg  parent_frame)"/>
@@ -50,6 +54,10 @@
         <param name="confidence" value="$(arg confidence)"/>
         <param name="LRchecktresh" value="$(arg LRchecktresh)"/>
         <param name="monoResolution" value="$(arg monoResolution)"/>
+
+        <!--<param name="sync_nn"             value="$(arg sync_nn)"/>
+        <param name="nnName"              value="$(arg nnName)"/>
+        <param name="resourceBaseFolder"  value="$(arg resourceBaseFolder)"/> -->
     </node>
 
     <node pkg="nodelet" type="nodelet" name="depth_image_convertion_nodelet"

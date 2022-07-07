@@ -7,12 +7,48 @@
 #include <depthai_bridge/ImageConverter.hpp>
 #include <depthai_bridge/ImgDetectionConverter.hpp>
 #include <iostream>
+#include <string>
 
 #include "ros/ros.h"
 #include "sensor_msgs/Image.h"
 
 // Inludes common necessary includes for development using depthai library
 #include "depthai/depthai.hpp"
+using namespace std;
+
+std::tuple<dai::Pipeline,int,int> createMonoPipeline(bool syncNN, std::string nnPath) {
+        dai::Pipeline pipeline;
+        nnPath="/home/rami/nr22-software/src/deps/depthai-ros/depthai_examples/resources/mobilenet-ssd_openvino_2021.2_6shave_copy.blob";
+        auto colorCam = pipeline.create<dai::node::ColorCamera>();
+        auto xlinkOut = pipeline.create<dai::node::XLinkOut>();
+        auto detectionNetwork = pipeline.create<dai::node::MobileNetDetectionNetwork>();
+        auto nnOut = pipeline.create<dai::node::XLinkOut>();
+
+        xlinkOut->setStreamName("previeww");
+        nnOut->setStreamName("detectionss");
+
+        colorCam->setPreviewSize(300, 300);
+        colorCam->setResolution(dai::ColorCameraProperties::SensorResolution::THE_1080_P);
+        colorCam->setInterleaved(false);
+        colorCam->setColorOrder(dai::ColorCameraProperties::ColorOrder::BGR);
+        colorCam->setFps(15);
+
+        // testing MobileNet DetectionNetwork
+        detectionNetwork->setConfidenceThreshold(0.5f);
+        detectionNetwork->setBlobPath(nnPath);
+
+        // Link plugins CAM -> NN -> XLINK
+        colorCam->preview.link(detectionNetwork->input);
+        if(syncNN)
+            detectionNetwork->passthrough.link(xlinkOut->input);
+        else
+            colorCam->preview.link(xlinkOut->input);
+
+        detectionNetwork->out.link(nnOut->input);
+        int width= 1920;
+        int height= 1080;
+        return std::make_tuple(pipeline, width, height);
+}
 
 dai::Pipeline createPipeline(bool syncNN, std::string nnPath) {
     dai::Pipeline pipeline;
@@ -52,6 +88,14 @@ int main(int argc, char** argv) {
     std::string tfPrefix;
     std::string cameraParamUri, resourceBaseFolder, nnPath;
     std::string nnName(BLOB_NAME);
+
+
+    std::unique_ptr<dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame>> leftPublish, rightPublish, depthPublish,rgbPublish,rgbPublishOAK;
+    std::unique_ptr<dai::rosBridge::BridgePublisher<vision_msgs::Detection2DArray, dai::ImgDetections>> detectionPublish,detectionPublishOAK;
+    std::unique_ptr<dai::rosBridge::ImageConverter> leftConverter, rightConverter,rgbConverter,rgbConverterOAK;
+    std::unique_ptr<dai::rosBridge::ImgDetectionConverter> detConverter,detConverterOAK;
+    std::unique_ptr<dai::Device> _dev,_dev_mono,_dev_temp;
+
     bool syncNN;
     int badParams = 0;
 
@@ -74,38 +118,51 @@ int main(int argc, char** argv) {
     }
 
     nnPath = resourceBaseFolder + "/" + nnName;
-    dai::Pipeline pipeline = createPipeline(syncNN, nnPath);
-    dai::Device device(pipeline);
+    //std::dai::Pipeline pipeline = createMonoPipeline(syncNN, nnPath);
+    dai::Pipeline pipeline;
+    bool found; dai::DeviceInfo device_info,device_info2;
+    int rgbWidth,rgbHeight;
 
-    std::shared_ptr<dai::DataOutputQueue> previewQueue = device.getOutputQueue("preview", 30, false);
-    std::shared_ptr<dai::DataOutputQueue> nNetDataQueue = device.getOutputQueue("detections", 30, false);
 
-    std::string color_uri = cameraParamUri + "/" + "color.yaml";
+    std::tie(pipeline,rgbWidth,rgbHeight) = createMonoPipeline(syncNN, nnPath); //this line BAD
+    std::tie(found, device_info2) = dai::Device::getDeviceByMxId("1844301081F1670F00");
+    _dev_mono = std::make_unique<dai::Device>(pipeline,device_info2); //OAK-1 MXID: 1844301081F1670F00
 
-    dai::rosBridge::ImageConverter rgbConverter(tfPrefix + "_rgb_camera_optical_frame", false);
-    dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame> rgbPublish(previewQueue,
-                                                                                  pnh,
-                                                                                  std::string("color/image"),
-                                                                                  std::bind(&dai::rosBridge::ImageConverter::toRosMsg,
-                                                                                            &rgbConverter,  // since the converter has the same frame name
+
+
+
+    std::shared_ptr<dai::DataOutputQueue> previewQueueRGB = _dev_mono->getOutputQueue("previeww", 15, false);
+    std::shared_ptr<dai::DataOutputQueue> nNetDataQueueRGB = _dev_mono->getOutputQueue("detectionss", 15, false);
+
+     //OAK-1 PUBLISHERS
+        
+    rgbConverterOAK= std::make_unique<dai::rosBridge::ImageConverter >(tfPrefix + "_OAK1_camera_optical_frame", true);
+    rgbPublishOAK=  std::make_unique<dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame>> (previewQueueRGB,
+                                                                                pnh,
+                                                                                std::string("OAK1/image"),
+                                                                                std::bind(&dai::rosBridge::ImageConverter::toRosMsg,
+                                                                                            rgbConverterOAK.get(),  // since the converter has the same frame name
                                                                                                             // and image type is also same we can reuse it
                                                                                             std::placeholders::_1,
                                                                                             std::placeholders::_2),
-                                                                                  30,
-                                                                                  color_uri,
-                                                                                  "color");
+                                                                                15,
+                                                                                "",
+                                                                                "OAK1");
+    //intercept toRosmsg 
 
-    dai::rosBridge::ImgDetectionConverter detConverter(tfPrefix + "_rgb_camera_optical_frame", 300, 300, false);
-    dai::rosBridge::BridgePublisher<vision_msgs::Detection2DArray, dai::ImgDetections> detectionPublish(
-        nNetDataQueue,
+    //dai::rosBridge::ImgDetectionConverter detConverter(tfPrefix + "_rgb_camera_optical_frame", 300, 300, false);;
+    detConverterOAK = std::make_unique<dai::rosBridge::ImgDetectionConverter> (tfPrefix + "_OAK1_camera_optical_frame", 300, 300, false);
+    
+    detectionPublishOAK= std::make_unique<dai::rosBridge::BridgePublisher<vision_msgs::Detection2DArray, dai::ImgDetections>> (
+        nNetDataQueueRGB,
         pnh,
-        std::string("color/mobilenet_detections"),
-        std::bind(&dai::rosBridge::ImgDetectionConverter::toRosMsg, &detConverter, std::placeholders::_1, std::placeholders::_2),
-        30);
+        std::string("OAK1/mobilenet_detections"),
+        std::bind(&dai::rosBridge::ImgDetectionConverter::toRosMsg, detConverterOAK.get(), std::placeholders::_1, std::placeholders::_2),
+        15);
 
-    detectionPublish.addPublisherCallback();
-    rgbPublish.addPublisherCallback();  // addPublisherCallback works only when the dataqueue is non blocking.
-
+    cout << "PUBLISHER CALLBACK" << endl;
+    detectionPublishOAK->addPublisherCallback();
+    rgbPublishOAK->addPublisherCallback();  // addPublisherCallback works only when the dataqueue is non blocking.
     ros::spin();
 
     return 0;
