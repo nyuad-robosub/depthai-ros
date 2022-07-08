@@ -42,9 +42,9 @@ namespace depthai_examples{
             int confidence = 200;
             int LRchecktresh = 5;
 
-            std::string resourceBaseFolder("/home/rami/nr22-software/src/deps/depthai-ros/depthai_examples/resources");
+            std::string resourceBaseFolder;//("/home/rami/nr22-software/src/deps/depthai-ros/depthai_examples/resources");
             std::string nnPath;
-            std::string nnName("mobilenet-ssd_openvino_2021.2_6shave.blob");
+            std::string nnName;//("mobilenet-ssd_openvino_2021.2_6shave.blob");
             bool syncNN(true);
 
             badParams += !pnh.getParam("tf_prefix", tfPrefix);
@@ -56,7 +56,11 @@ namespace depthai_examples{
             badParams += !pnh.getParam("confidence",  confidence);
             badParams += !pnh.getParam("LRchecktresh",  LRchecktresh);
             badParams += !pnh.getParam("monoResolution",  monoResolution);
-            
+            badParams += !pnh.getParam("tf_prefix", tfPrefix);
+            badParams += !pnh.getParam("camera_param_uri", cameraParamUri);
+            badParams += !pnh.getParam("sync_nn", syncNN);
+            badParams += !pnh.getParam("resourceBaseFolder", resourceBaseFolder);
+
             if (badParams > 0)
             {   
                 std::cout << " Bad parameters -> " << badParams << std::endl;
@@ -223,7 +227,7 @@ namespace depthai_examples{
         //intercept toRosmsg 
 
         //dai::rosBridge::ImgDetectionConverter detConverter(tfPrefix + "_rgb_camera_optical_frame", 300, 300, false);;
-        detConverter = std::make_unique<dai::rosBridge::ImgDetectionConverter> (tfPrefix + "_rgb_camera_optical_frame", 300, 300, false);
+        detConverter = std::make_unique<dai::rosBridge::ImgDetectionConverter> (tfPrefix + "_rgb_camera_optical_frame",640, 400, false);
         
         detectionPublish= std::make_unique<dai::rosBridge::BridgePublisher<vision_msgs::Detection2DArray, dai::ImgDetections>> (
             nNetDataQueue,
@@ -395,6 +399,7 @@ namespace depthai_examples{
         nnOut->setStreamName("detections");
 
         colorCam->setPreviewSize(300, 300);
+        colorCam->setPreviewKeepAspectRatio(false);
         colorCam->setResolution(dai::ColorCameraProperties::SensorResolution::THE_1080_P);
         colorCam->setInterleaved(false);
         colorCam->setColorOrder(dai::ColorCameraProperties::ColorOrder::BGR);

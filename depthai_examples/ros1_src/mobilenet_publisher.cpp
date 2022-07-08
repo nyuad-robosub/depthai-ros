@@ -18,7 +18,7 @@ using namespace std;
 
 std::tuple<dai::Pipeline,int,int> createMonoPipeline(bool syncNN, std::string nnPath) {
         dai::Pipeline pipeline;
-        nnPath="/home/rami/nr22-software/src/deps/depthai-ros/depthai_examples/resources/mobilenet-ssd_openvino_2021.2_6shave_copy.blob";
+        //nnPath="/home/rami/nr22-software/src/deps/depthai-ros/depthai_examples/resources/frozen_inference_graph_openvino_2021.4_6shave.blob";
         auto colorCam = pipeline.create<dai::node::ColorCamera>();
         auto xlinkOut = pipeline.create<dai::node::XLinkOut>();
         auto detectionNetwork = pipeline.create<dai::node::MobileNetDetectionNetwork>();
@@ -28,6 +28,8 @@ std::tuple<dai::Pipeline,int,int> createMonoPipeline(bool syncNN, std::string nn
         nnOut->setStreamName("detectionss");
 
         colorCam->setPreviewSize(300, 300);
+        colorCam->setPreviewKeepAspectRatio(false);
+
         colorCam->setResolution(dai::ColorCameraProperties::SensorResolution::THE_1080_P);
         colorCam->setInterleaved(false);
         colorCam->setColorOrder(dai::ColorCameraProperties::ColorOrder::BGR);
@@ -48,37 +50,6 @@ std::tuple<dai::Pipeline,int,int> createMonoPipeline(bool syncNN, std::string nn
         int width= 1920;
         int height= 1080;
         return std::make_tuple(pipeline, width, height);
-}
-
-dai::Pipeline createPipeline(bool syncNN, std::string nnPath) {
-    dai::Pipeline pipeline;
-    auto colorCam = pipeline.create<dai::node::ColorCamera>();
-    auto xlinkOut = pipeline.create<dai::node::XLinkOut>();
-    auto detectionNetwork = pipeline.create<dai::node::MobileNetDetectionNetwork>();
-    auto nnOut = pipeline.create<dai::node::XLinkOut>();
-
-    xlinkOut->setStreamName("preview");
-    nnOut->setStreamName("detections");
-
-    colorCam->setPreviewSize(300, 300);
-    colorCam->setResolution(dai::ColorCameraProperties::SensorResolution::THE_1080_P);
-    colorCam->setInterleaved(false);
-    colorCam->setColorOrder(dai::ColorCameraProperties::ColorOrder::BGR);
-    colorCam->setFps(40);
-
-    // testing MobileNet DetectionNetwork
-    detectionNetwork->setConfidenceThreshold(0.5f);
-    detectionNetwork->setBlobPath(nnPath);
-
-    // Link plugins CAM -> NN -> XLINK
-    colorCam->preview.link(detectionNetwork->input);
-    if(syncNN)
-        detectionNetwork->passthrough.link(xlinkOut->input);
-    else
-        colorCam->preview.link(xlinkOut->input);
-
-    detectionNetwork->out.link(nnOut->input);
-    return pipeline;
 }
 
 int main(int argc, char** argv) {
@@ -151,7 +122,7 @@ int main(int argc, char** argv) {
     //intercept toRosmsg 
 
     //dai::rosBridge::ImgDetectionConverter detConverter(tfPrefix + "_rgb_camera_optical_frame", 300, 300, false);;
-    detConverterOAK = std::make_unique<dai::rosBridge::ImgDetectionConverter> (tfPrefix + "_OAK1_camera_optical_frame", 300, 300, false);
+    detConverterOAK = std::make_unique<dai::rosBridge::ImgDetectionConverter> (tfPrefix + "_OAK1_camera_optical_frame", 640, 400, false);
     
     detectionPublishOAK= std::make_unique<dai::rosBridge::BridgePublisher<vision_msgs::Detection2DArray, dai::ImgDetections>> (
         nNetDataQueueRGB,
