@@ -19,6 +19,8 @@
 using namespace std;
 namespace depthai_examples{
 
+const std::vector<std::string> label_map = {
+ "bin_empty", "handle", "image_badge", "image_bootlegger", "image_gman", "image_tommygun", "lid_empty", "marker", "qual_gate"};
 
  class StereoNodelet : public nodelet::Nodelet
 {
@@ -28,6 +30,7 @@ namespace depthai_examples{
     std::unique_ptr<dai::rosBridge::ImageConverter> leftConverter, rightConverter,rgbConverter,rgbConverterOAK;
     std::unique_ptr<dai::rosBridge::ImgDetectionConverter> detConverter,detConverterOAK;
     std::unique_ptr<dai::Device> _dev,_dev_mono,_dev_temp;
+    
 
     public:
         virtual void onInit() override {
@@ -368,6 +371,7 @@ namespace depthai_examples{
         stereo->initialConfig.setConfidenceThreshold(confidence);
         stereo->initialConfig.setLeftRightCheckThreshold(LRchecktresh);
         stereo->setRectifyEdgeFillColor(0); // black, to better see the cutout
+        stereo->setDepthAlign(dai::CameraBoardSocket::RGB);
 
         stereo->setLeftRightCheck(lrcheck);
         stereo->setExtendedDisparity(extended);
@@ -393,7 +397,7 @@ namespace depthai_examples{
         auto xlinkOut = pipeline.create<dai::node::XLinkOut>();
         auto xlinkIn = pipeline.create<dai::node::XLinkIn>();
 
-        auto spatialDetectionNetwork = pipeline.create<dai::node::YoloSpatialDetectionNetwork>();
+        auto yoloDet = pipeline.create<dai::node::YoloSpatialDetectionNetwork>();
         auto nnOut = pipeline.create<dai::node::XLinkOut>();
         
         xlinkIn->setStreamName("caminput");
@@ -409,27 +413,28 @@ namespace depthai_examples{
         colorCam->setFps(15);
 
         // Convert the grayscale frame into the nn-acceptable form
-        manip->initialConfig.setResize(300, 300);
+        manip->initialConfig.setResize(416, 416);
         // The NN model expects BGR input. By default ImageManip output type would be same as input (gray in this case)
         manip->initialConfig.setFrameType(dai::ImgFrame::Type::BGR888p);
-        
-        // testing MobileNet DetectionNetwork
-        detectionNetwork->setConfidenceThreshold(0.5f);
-        detectionNetwork->setBlobPath(nnPath);
+    
+        // yolo specific parameters
+        yoloDet->setBlobPath(nnPath);
+        yoloDet->setNumClasses(9);
+        yoloDet->setCoordinateSize(4);
+        yoloDet->setAnchors({ 10.921875, 76.3125, 78.0625, 22.046875, 30.484375, 69.625, 50.53125, 130.375, 125.375, 62.1875, 113.8125, 111.8125, 121.125, 262.0, 236.25, 137.625, 650.5, 510.75});
+        yoloDet->setAnchorMasks({{"side13", {6, 7, 8}}, {"side26", {3, 4, 5}}, {"side52", {0, 1, 2}}});
+        yoloDet->setConfidenceThreshold(0.5f);
 
         // Link plugins CAM -> IMMANIP -> NN -> XLINK
         colorCam->preview.link(manip->inputImage);
-        manip->out.link(detectionNetwork->input);
+        manip->out.link(yoloDet->input);
         if(syncNN) {
-            detectionNetwork->passthrough.link(xlinkOut->input);
+            yoloDet->passthrough.link(xlinkOut->input);
         }
         else {
             colorCam->preview.link(xlinkOut->input);
         }
-
-        detectionNetwork->out.link(nnOut->input);
-
-        
+        yoloDet->out.link(nnOut->input);
 
         return std::make_tuple(pipeline, width, height);
     }

@@ -82,7 +82,7 @@ dai::Pipeline createPipeline(bool syncNN, bool subpixel, std::string nnPath, int
     spatialDetectionNetwork->setNumClasses(9);
     spatialDetectionNetwork->setCoordinateSize(4);
     spatialDetectionNetwork->setAnchors({ 10.921875, 76.3125, 78.0625, 22.046875, 30.484375, 69.625, 50.53125, 130.375, 125.375, 62.1875, 113.8125, 111.8125, 121.125, 262.0, 236.25, 137.625, 650.5, 510.75});
-    spatialDetectionNetwork->setAnchorMasks({{"side52", {0, 1, 2}}, {"side26", {3, 4, 5}}, {"side13", {6, 7, 8}}});
+    spatialDetectionNetwork->setAnchorMasks({{"side13", {6, 7, 8}}, {"side26", {3, 4, 5}}, {"side52", {0, 1, 2}}});
     spatialDetectionNetwork->setIouThreshold(0.5f);
 
     // Link plugins CAM -> STEREO -> XLINK
