@@ -44,7 +44,7 @@
     <node pkg="nodelet" type="nodelet" name="nodelet_manager"  args="manager" output="screen"/>
 
     <node name="stereo_publisher" pkg="nodelet" type="nodelet" output="screen" required="true"
-        args="load depthai_examples/StereoNodelet nodelet_manager">
+        args="load depthai_examples/StereoNodeletYolo nodelet_manager">
         <param name="tf_prefix" value="$(arg tf_prefix)"/>
         <param name="camera_param_uri" value="$(arg camera_param_uri)"/>
         <param name="mode" value="$(arg mode)"/>

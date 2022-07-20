@@ -22,7 +22,7 @@ namespace depthai_examples{
 const std::vector<std::string> label_map = {
  "bin_empty", "handle", "image_badge", "image_bootlegger", "image_gman", "image_tommygun", "lid_empty", "marker", "qual_gate"};
 
- class StereoNodelet : public nodelet::Nodelet
+ class StereoNodeletYolo : public nodelet::Nodelet
 {
 
     std::unique_ptr<dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame>> leftPublish, rightPublish, depthPublish,rgbPublish,rgbPublishOAK;
@@ -440,5 +440,5 @@ const std::vector<std::string> label_map = {
     }
 };
 
-PLUGINLIB_EXPORT_CLASS(depthai_examples::StereoNodelet, nodelet::Nodelet)
+PLUGINLIB_EXPORT_CLASS(depthai_examples::StereoNodeletYolo, nodelet::Nodelet)
 }   // namespace depthai_examples

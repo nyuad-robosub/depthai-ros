@@ -21,13 +21,14 @@ std::tuple<dai::Pipeline,int,int> createMonoPipeline(bool syncNN, std::string nn
         //nnPath="/home/rami/nr22-software/src/deps/depthai-ros/depthai_examples/resources/frozen_inference_graph_openvino_2021.4_6shave.blob";
         auto colorCam = pipeline.create<dai::node::ColorCamera>();
         auto xlinkOut = pipeline.create<dai::node::XLinkOut>();
+        auto manip = pipeline.create<dai::node::ImageManip>();
         auto detectionNetwork = pipeline.create<dai::node::MobileNetDetectionNetwork>();
         auto nnOut = pipeline.create<dai::node::XLinkOut>();
 
         xlinkOut->setStreamName("previeww");
         nnOut->setStreamName("detectionss");
 
-        colorCam->setPreviewSize(300, 300);
+        colorCam->setPreviewSize(640, 400);
         colorCam->setPreviewKeepAspectRatio(false);
 
         colorCam->setResolution(dai::ColorCameraProperties::SensorResolution::THE_1080_P);
@@ -35,12 +36,18 @@ std::tuple<dai::Pipeline,int,int> createMonoPipeline(bool syncNN, std::string nn
         colorCam->setColorOrder(dai::ColorCameraProperties::ColorOrder::BGR);
         colorCam->setFps(15);
 
+        // Convert the grayscale frame into the nn-acceptable form
+        manip->initialConfig.setResize(300, 300);
+        // The NN model expects BGR input. By default ImageManip output type would be same as input (gray in this case)
+        manip->initialConfig.setFrameType(dai::ImgFrame::Type::BGR888p);
+
         // testing MobileNet DetectionNetwork
         detectionNetwork->setConfidenceThreshold(0.5f);
         detectionNetwork->setBlobPath(nnPath);
 
-        // Link plugins CAM -> NN -> XLINK
-        colorCam->preview.link(detectionNetwork->input);
+        // Link plugins CAM -> IMMANIP -> NN -> XLINK
+        colorCam->preview.link(manip->inputImage);
+        manip->out.link(detectionNetwork->input);
         if(syncNN)
             detectionNetwork->passthrough.link(xlinkOut->input);
         else

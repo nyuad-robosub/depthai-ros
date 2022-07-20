@@ -178,7 +178,7 @@ elseif( CATKIN_DEVEL_PREFIX OR CATKIN_BUILD_BINARY_PACKAGE )
     ${OpenCV_INCLUDE_DIRS}
   )
 
-  add_library(nodelet_stereo ros1_src/stereo_nodelet.cpp)
+  add_library(nodelet_stereo ros1_src/stereo_nodelet.cpp ros1_src/stereo_nodelet_yolo.cpp)
 
   add_dependencies(nodelet_stereo ${${PROJECT_NAME}_EXPORTED_TARGETS}
     ${catkin_EXPORTED_TARGETS} 

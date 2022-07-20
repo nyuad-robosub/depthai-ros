@@ -393,7 +393,7 @@ namespace depthai_examples{
         auto xlinkOut = pipeline.create<dai::node::XLinkOut>();
         auto xlinkIn = pipeline.create<dai::node::XLinkIn>();
 
-        auto spatialDetectionNetwork = pipeline.create<dai::node::YoloSpatialDetectionNetwork>();
+        auto detectionNetwork = pipeline.create<dai::node::MobileNetDetectionNetwork>();
         auto nnOut = pipeline.create<dai::node::XLinkOut>();
         
         xlinkIn->setStreamName("caminput");
