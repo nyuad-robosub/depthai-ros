@@ -16,9 +16,13 @@
 #include "depthai/depthai.hpp"
 using namespace std;
 
-std::tuple<dai::Pipeline,int,int> createMonoPipeline(bool syncNN, std::string nnPath) {
+std::tuple<dai::Pipeline,int,int> createMonoPipeline(bool syncNN, std::string nnPath, std::string calib_path) {
+        dai::CalibrationHandler calibData(calib_path);
+
+        // Create pipeline
         dai::Pipeline pipeline;
-        //nnPath="/home/rami/nr22-software/src/deps/depthai-ros/depthai_examples/resources/frozen_inference_graph_openvino_2021.4_6shave.blob";
+        pipeline.setCalibrationData(calibData);
+        
         auto colorCam = pipeline.create<dai::node::ColorCamera>();
         auto xlinkOut = pipeline.create<dai::node::XLinkOut>();
         auto manip = pipeline.create<dai::node::ImageManip>();
@@ -66,7 +70,7 @@ int main(int argc, char** argv) {
     std::string tfPrefix;
     std::string cameraParamUri, resourceBaseFolder, nnPath;
     std::string nnName(BLOB_NAME);
-
+    std::string calibration_file;
 
     std::unique_ptr<dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame>> leftPublish, rightPublish, depthPublish,rgbPublish,rgbPublishOAK;
     std::unique_ptr<dai::rosBridge::BridgePublisher<vision_msgs::Detection2DArray, dai::ImgDetections>> detectionPublish,detectionPublishOAK;
@@ -77,6 +81,7 @@ int main(int argc, char** argv) {
     bool syncNN;
     int badParams = 0;
 
+    badParams += !pnh.getParam("calibration_file", calibration_file);
     badParams += !pnh.getParam("tf_prefix", tfPrefix);
     badParams += !pnh.getParam("camera_param_uri", cameraParamUri);
     badParams += !pnh.getParam("sync_nn", syncNN);
@@ -102,7 +107,7 @@ int main(int argc, char** argv) {
     int rgbWidth,rgbHeight;
 
 
-    std::tie(pipeline,rgbWidth,rgbHeight) = createMonoPipeline(syncNN, nnPath); //this line BAD
+    std::tie(pipeline,rgbWidth,rgbHeight) = createMonoPipeline(syncNN, nnPath, calibration_file);
     std::tie(found, device_info2) = dai::Device::getDeviceByMxId("1844301081F1670F00");
     _dev_mono = std::make_unique<dai::Device>(pipeline,device_info2); //OAK-1 MXID: 1844301081F1670F00
 

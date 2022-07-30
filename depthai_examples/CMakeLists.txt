@@ -12,7 +12,7 @@ if(POLICY CMP0057)
 endif()
 
 set(_opencv_version 4)
-find_package (OpenCV 4.4 EXACT REQUIRED PATHS ~/nr22-software/include/ORB_SLAM3_OPENCV4/Thirdparty/opencv-4.4.0/build COMPONENTS imgproc highgui)
+find_package (OpenCV 4.4 EXACT REQUIRED PATHS ~/nr22-software/include/opencv-4.4.0/build COMPONENTS imgproc highgui)
 #find_package(OpenCV 4 QUIET COMPONENTS imgproc highgui)
 if(NOT OpenCV_FOUND)
   set(_opencv_version 3)

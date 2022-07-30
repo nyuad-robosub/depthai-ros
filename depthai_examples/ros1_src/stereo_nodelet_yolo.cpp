@@ -376,6 +376,7 @@ const std::vector<std::string> label_map = {
         stereo->setLeftRightCheck(lrcheck);
         stereo->setExtendedDisparity(extended);
         stereo->setSubpixel(subpixel);
+        stereo->setRectification(true);
 
         // Link plugins CAM -> STEREO -> XLINK
         monoLeft->out.link(stereo->left);

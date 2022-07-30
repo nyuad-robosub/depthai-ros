@@ -35,6 +35,7 @@ namespace depthai_examples{
             auto& pnh = getPrivateNodeHandle();
             
             std::string tfPrefix, mode;
+            std::string calibration_file;
             std::string cameraParamUri;
             std::string monoResolution = "400p";
             int badParams = 0;
@@ -46,7 +47,7 @@ namespace depthai_examples{
             std::string nnPath;
             std::string nnName;//("mobilenet-ssd_openvino_2021.2_6shave.blob");
             bool syncNN(true);
-
+            badParams += !pnh.getParam("calibration_file", calibration_file);
             badParams += !pnh.getParam("tf_prefix", tfPrefix);
             badParams += !pnh.getParam("camera_param_uri", cameraParamUri);
             badParams += !pnh.getParam("mode", mode);
@@ -105,15 +106,11 @@ namespace depthai_examples{
             //     }
             // }
 
-            bool found; dai::DeviceInfo device_info,device_info2;
+            bool found; dai::DeviceInfo device_info;
 
-
-            // std::tie(pipeline2,rgbWidth,rgbHeight) = createMonoPipeline(syncNN, nnPath); //this line BAD
-            // std::tie(found, device_info2) = dai::Device::getDeviceByMxId("1844301081F1670F00");
-            // _dev_mono = std::make_unique<dai::Device>(pipeline2,device_info2,true); //OAK-1 MXID: 1844301081F1670F00
-
-            std::tie(pipeline, monoWidth, monoHeight) = createPipeline(enableDepth, lrcheck, extended, subpixel, confidence, LRchecktresh, monoResolution,syncNN, nnPath);
+            std::tie(pipeline, monoWidth, monoHeight) = createPipeline(enableDepth, lrcheck, extended, subpixel, confidence, LRchecktresh, monoResolution,syncNN, nnPath, calibration_file);
             std::tie(found, device_info) = dai::Device::getDeviceByMxId("1844301021693E0E00");
+            //_dev = std::make_unique<dai::Device>(pipeline);
             _dev = std::make_unique<dai::Device>(pipeline,device_info,false); // Our OAK-D MXID: 1844301021693E0E00
            
         
@@ -310,8 +307,12 @@ namespace depthai_examples{
     //     return std::make_tuple(pipeline, width, height);
     // }
 
-    std::tuple<dai::Pipeline, int, int> createPipeline(bool withDepth, bool lrcheck, bool extended, bool subpixel, int confidence, int LRchecktresh, std::string resolution,bool syncNN, std::string nnPath){
+    std::tuple<dai::Pipeline, int, int> createPipeline(bool withDepth, bool lrcheck, bool extended, bool subpixel, int confidence, int LRchecktresh, std::string resolution,bool syncNN, std::string nnPath, std::string calib_path){
+        dai::CalibrationHandler calibData(calib_path);
+
+        // Create pipeline
         dai::Pipeline pipeline;
+        pipeline.setCalibrationData(calibData);
 
         auto monoLeft    = pipeline.create<dai::node::MonoCamera>();
         auto monoRight   = pipeline.create<dai::node::MonoCamera>();
@@ -367,6 +368,7 @@ namespace depthai_examples{
         // StereoDepth
         stereo->initialConfig.setConfidenceThreshold(confidence);
         stereo->initialConfig.setLeftRightCheckThreshold(LRchecktresh);
+        stereo->setRectification(true);
         stereo->setRectifyEdgeFillColor(0); // black, to better see the cutout
 
         stereo->setLeftRightCheck(lrcheck);

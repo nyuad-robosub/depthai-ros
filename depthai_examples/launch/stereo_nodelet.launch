@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <launch>
-       
+    <arg name="calibration_file"     default="$(find depthai_examples)/calibration/oakd_water.json" />
     <arg name="camera_model"         default="OAK-D" /> <!-- 'zed' or 'zedm' -->
     <arg name="tf_prefix"            default="oak" />
     <arg name="mode"                 default="depth" />
@@ -45,6 +45,7 @@
 
     <node name="stereo_publisher" pkg="nodelet" type="nodelet" output="screen" required="true"
         args="load depthai_examples/StereoNodelet nodelet_manager">
+        <param name="calibration_file" value="$(arg calibration_file)"/>
         <param name="tf_prefix" value="$(arg tf_prefix)"/>
         <param name="camera_param_uri" value="$(arg camera_param_uri)"/>
         <param name="mode" value="$(arg mode)"/>
