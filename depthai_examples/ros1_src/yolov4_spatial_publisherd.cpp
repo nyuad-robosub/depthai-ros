@@ -19,7 +19,15 @@
 #include "depthai/depthai.hpp"
 
 const std::vector<std::string> label_map = {
- "bin_empty", "handle", "image_badge", "image_bootlegger", "image_gman", "image_tommygun", "lid_empty", "marker", "qual_gate"};
+    "person",        "bicycle",      "car",           "motorbike",     "aeroplane",   "bus",         "train",       "truck",        "boat",
+    "traffic light", "fire hydrant", "stop sign",     "parking meter", "bench",       "bird",        "cat",         "dog",          "horse",
+    "sheep",         "cow",          "elephant",      "bear",          "zebra",       "giraffe",     "backpack",    "umbrella",     "handbag",
+    "tie",           "suitcase",     "frisbee",       "skis",          "snowboard",   "sports ball", "kite",        "baseball bat", "baseball glove",
+    "skateboard",    "surfboard",    "tennis racket", "bottle",        "wine glass",  "cup",         "fork",        "knife",        "spoon",
+    "bowl",          "banana",       "apple",         "sandwich",      "orange",      "broccoli",    "carrot",      "hot dog",      "pizza",
+    "donut",         "cake",         "chair",         "sofa",          "pottedplant", "bed",         "diningtable", "toilet",       "tvmonitor",
+    "laptop",        "mouse",        "remote",        "keyboard",      "cell phone",  "microwave",   "oven",        "toaster",      "sink",
+    "refrigerator",  "book",         "clock",         "vase",          "scissors",    "teddy bear",  "hair drier",  "toothbrush"};
 std::unique_ptr<dai::rosBridge::BridgePublisher<sensor_msgs::Image, dai::ImgFrame>> rgbPublish, depthPublish;
 std::unique_ptr<dai::Device> _dev;
 
@@ -79,10 +87,10 @@ dai::Pipeline createPipeline(bool syncNN, bool subpixel, std::string nnPath, int
     spatialDetectionNetwork->setDepthUpperThreshold(5000);
 
     // yolo specific parameters
-    spatialDetectionNetwork->setNumClasses(9);
+    spatialDetectionNetwork->setNumClasses(80);
     spatialDetectionNetwork->setCoordinateSize(4);
-    spatialDetectionNetwork->setAnchors({ 10.921875, 76.3125, 78.0625, 22.046875, 30.484375, 69.625, 50.53125, 130.375, 125.375, 62.1875, 113.8125, 111.8125, 121.125, 262.0, 236.25, 137.625, 650.5, 510.75});
-    spatialDetectionNetwork->setAnchorMasks({{"side13", {6, 7, 8}}, {"side26", {3, 4, 5}}, {"side52", {0, 1, 2}}});
+    spatialDetectionNetwork->setAnchors({10, 14, 23, 27, 37, 58, 81, 82, 135, 169, 344, 319});
+    spatialDetectionNetwork->setAnchorMasks({{"side13", {3, 4, 5}}, {"side26", {1, 2, 3}}});
     spatialDetectionNetwork->setIouThreshold(0.5f);
 
     // Link plugins CAM -> STEREO -> XLINK

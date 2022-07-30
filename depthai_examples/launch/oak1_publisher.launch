@@ -1,10 +1,12 @@
 <?xml version="1.0"?>
 <launch>
     <!-- <args for urdf/> -->
-    <arg name="camera_model"        default="OAK-D"   /> <!-- 'zed' or 'zedm' -->
-    <arg name="tf_prefix"           default="oak"         />
-    <arg name="base_frame"          default="oak-d_frame" />
-    <arg name="parent_frame"        default="oak-d-base-frame" />
+    <arg name="calibration_file"                 default="$(find depthai_examples)/calibration/oakd_water.json" />
+    <arg name="is_pool"             default="true" /> <!-- if in pool will adjust calibration parameters accordingly -->
+    <arg name="camera_model"        default="oak-1"   /> <!-- 'zed' or 'zedm' -->
+    <arg name="tf_prefix"           default="oak1"         />
+    <arg name="base_frame"          default="oak-1_frame" />
+    <arg name="parent_frame"        default="oak-1-base-frame" />
 
     <arg name="cam_pos_x"           default="0.0"        /> <!-- Position respect to base frame (i.e. "base_link) -->
     <arg name="cam_pos_y"           default="0.0"        /> <!-- Position respect to base frame (i.e. "base_link) -->
@@ -32,6 +34,7 @@
     </include>
 
     <node name="mobilenet_publisherr" pkg="depthai_examples" type="mobilenet_node" output="screen" required="true">
+        <param name="calibration_file" value="$(arg calibration_file)"/>
         <param name="tf_prefix"           value="$(arg tf_prefix)"     />
         <param name="camera_param_uri"    value="$(arg camera_param_uri)"/>
         <param name="sync_nn"             value="$(arg sync_nn)"/>
