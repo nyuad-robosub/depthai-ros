@@ -108,6 +108,10 @@ namespace depthai_examples{
 
             bool found; dai::DeviceInfo device_info;
 
+            // std::tie(pipeline2,rgbWidth,rgbHeight) = createMonoPipeline(syncNN, nnPath); //this line BAD
+            // std::tie(found, device_info2) = dai::Device::getDeviceByMxId("1844301081F1670F00");
+            // _dev_mono = std::make_unique<dai::Device>(pipeline2,device_info2,true); //OAK-1 MXID: 1844301081F1670F00
+
             std::tie(pipeline, monoWidth, monoHeight) = createPipeline(enableDepth, lrcheck, extended, subpixel, confidence, LRchecktresh, monoResolution,syncNN, nnPath, calibration_file);
             std::tie(found, device_info) = dai::Device::getDeviceByMxId("1844301021693E0E00");
             //_dev = std::make_unique<dai::Device>(pipeline);
